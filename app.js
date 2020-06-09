@@ -3,6 +3,7 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const ejs = require('ejs');
 const mongoose = require('mongoose');
+const encrypt = require('mongoose-encryption');
 const port = 4000;
 
 const app = express();
@@ -13,10 +14,15 @@ app.use(express.static('public'));
 
 mongoose.connect('mongodb://localhost:27017/usersDB', {useNewUrlParser: true, useUnifiedTopology: true});
 // Create a new users database
-const userSchema = {
+const userSchema = new mongoose.Schema({
   email: String,
   password: String
-}
+});
+
+// ENCRYPTION: Make sure to add this plugin before you create model bc userSchema is used there
+const secret = "thisIsOurLittleSecret.";
+userSchema.plugin(encrypt, { secret: secret, encryptedFields: ['password'] });
+
 const User = new mongoose.model('User', userSchema);
 
 app.get('/', function(req, res) {
@@ -56,6 +62,7 @@ app.post('/login', function(req, res) {
     } else {
       if (foundUser) {
         if (foundUser.password === enteredPassword) {
+          // console.log(foundUser.password);
           res.render('secrets');
         }
       }
