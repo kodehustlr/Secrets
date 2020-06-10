@@ -1,4 +1,5 @@
 //jshint esversion:6
+require('dotenv').config()
 const express = require('express');
 const bodyParser = require('body-parser');
 const ejs = require('ejs');
@@ -20,7 +21,9 @@ const userSchema = new mongoose.Schema({
 });
 
 // ENCRYPTION: Make sure to add this plugin before you create model bc userSchema is used there
-const secret = "thisIsOurLittleSecret.";
+// const secret = "thisIsOurLittleSecret."; --> moved to .env and this should be deleted
+// console.log(process.env.API_KEY);
+const secret = process.env.SECRET;
 userSchema.plugin(encrypt, { secret: secret, encryptedFields: ['password'] });
 
 const User = new mongoose.model('User', userSchema);
