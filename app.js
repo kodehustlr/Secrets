@@ -5,7 +5,9 @@ const bodyParser = require('body-parser');
 const ejs = require('ejs');
 const mongoose = require('mongoose');
 // const encrypt = require('mongoose-encryption');
-const md5 = require('md5');
+// const md5 = require('md5');
+const bcrypt = require('bcrypt');
+const saltRounds = 10;
 const port = 4000;
 
 const app = express();
@@ -45,9 +47,18 @@ app.get('/register', function(req, res) {
 });
 
 app.post('/register', function(req, res) {
+  // bcrypt.hash(req.body.password, saltRounds, function(err, hash) {
+  //   const newUser = new User({
+  //     email: req.body.username,
+  //     password: hash
+  //   });
+  // }); --> Angela's method
+  const hash = bcrypt.hashSync(req.body.password, saltRounds);
+
   const newUser = new User({
     email: req.body.username,
-    password: md5(req.body.password)
+    // password: md5(req.body.password)
+    password: hash
   });
 
   newUser.save(function(err) {
@@ -61,17 +72,24 @@ app.post('/register', function(req, res) {
 
 app.post('/login', function(req, res) {
   const enteredUsername = req.body.username;
-  const enteredPassword = md5(req.body.password);
+  const enteredPassword = req.body.password;
+  // const enteredPassword = md5(req.body.password);
 
   User.findOne({email: enteredUsername}, function(err, foundUser) {
     if (err) {
       console.log(err);
     } else {
       if (foundUser) {
-        if (foundUser.password === enteredPassword) {
-          // console.log(foundUser.password);
-          res.render('secrets');
-        }
+        bcrypt.compare(enteredPassword, foundUser.password, function(err, result) {
+          if (result === true) {
+            res.render('secrets');
+          }
+        });
+
+        // if (foundUser.password === enteredPassword) {
+        //   // console.log(foundUser.password);
+        //   res.render('secrets');
+        // }
       }
     }
   })
