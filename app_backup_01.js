@@ -1,5 +1,5 @@
 //jshint esversion:6
-require('dotenv').config();
+require('dotenv').config()
 const express = require('express');
 const bodyParser = require('body-parser');
 const ejs = require('ejs');
@@ -72,14 +72,13 @@ passport.deserializeUser(function(id, done) {
 });
 
 passport.use(new GoogleStrategy({
-    clientID: process.env.CLIENT_ID,
-    clientSecret: process.env.CLIENT_SECRET,
+    clientID: process.env.GOOGLE_CLIENT_ID,
+    clientSecret: process.env.GOOGLE_CLIENT_SECRET,
     callbackURL: 'http://localhost:3000/auth/google/secrets',
-    userProfileURL: 'https://www.googleapis.com/oauth2/v3/userinfo'
+    userProfileURL: 'https://www.googleapis.com/oauth2/v3/userinfo',
   },
   function(accessToken, refreshToken, profile, cb) {
     console.log(profile);
-
     User.findOrCreate({ googleId: profile.id }, function (err, user) {
       return cb(err, user);
     });
@@ -110,46 +109,12 @@ app.get('/register', function(req, res) {
 });
 
 app.get('/secrets', function(req, res) {
-  User.find({'secret': {$ne:null}}, function(err, foundUsers) {
-    if (err) {
-      console.log(err);
-    } else {
-      if (foundUsers) {
-        res.render('secrets', {usersWithSecret: foundUsers});
-      }
-    }
-  });
-  // // check if a user is authenticated (already logined)
-  // if (req.isAuthenticated()) {
-  //   res.render('secrets');
-  // } else {
-  //   res.redirect('/login');
-  // }
-});
-
-app.get('/submit', function(req, res) {
+  // check if a user is authenticated (already logined)
   if (req.isAuthenticated()) {
-    res.render('submit');
+    res.render('secrets');
   } else {
     res.redirect('/login');
   }
-});
-
-app.post('/submit', function(req, res) {
-  const submittedSecret = req.body.secret;
-  // console.log(req.user);
-  User.findById(req.user.id, function(err, foundUser) {
-    if (err) {
-      console.log(err);
-    } else {
-      if (foundUser) {
-        foundUser.secret = submittedSecret;
-        foundUser.save(function() {
-          res.redirect('/secrets');
-        });
-      }
-    }
-  });
 });
 
 app.get('/logout', function(req, res) {
